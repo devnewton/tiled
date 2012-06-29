@@ -842,7 +842,8 @@ void MainWindow::exportAs()
 
     mSettings.setValue(QLatin1String("lastUsedExportFilter"), selectedFilter);
 
-    if (!chosenWriter->write(mMapDocument->map(), fileName)) {
+    Map* map = mMapDocument->map();
+    if (!chosenWriter->write(map, fileName)) {
         QMessageBox::critical(this, tr("Error Saving Map"),
                               chosenWriter->errorString());
     }
