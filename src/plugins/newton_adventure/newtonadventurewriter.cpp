@@ -35,6 +35,7 @@ void NewtonAdventureWriter::convertMap()
             convertObjectGroup(*objectGroup, zorder++);
         }
     }
+    level_.set_rotate_gravity_possible("true" == map_->properties()["newton_adventure.rotate_gravity_possible"]);
 }
 
 void NewtonAdventureWriter::convertObjectGroup(const Tiled::ObjectGroup& objectGroup, int zorder)
