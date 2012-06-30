@@ -1,4 +1,4 @@
-package im.bci.newtonadv;
+package im.bci.newtonadv.nal;
 
 option java_outer_classname = "NewtonAdventureLevelParser";
 
