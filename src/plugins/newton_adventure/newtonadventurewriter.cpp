@@ -348,12 +348,16 @@ void NewtonAdventureWriter::convertKey(im::bci::newtonadv::nal::EntityType& enti
 
 void NewtonAdventureWriter::convertDoor(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
 {
-    convertAnimation(*entityType.mutable_door()->mutable_animation(), object, properties);
+    im::bci::newtonadv::nal::Door& door = *entityType.mutable_door();
+    convertExternalAnimation(*door.mutable_open_animation(), properties, "newton_adventure.door.open_animation");
+    convertExternalAnimation(*door.mutable_closed_animation(), properties, "newton_adventure.door.closed_animation");
 }
 
 void NewtonAdventureWriter::convertDoorToBonusWorld(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
 {
-    convertAnimation(*entityType.mutable_door_to_bonus_world()->mutable_animation(), object, properties);
+    im::bci::newtonadv::nal::DoorToBonusWorld& door = *entityType.mutable_door_to_bonus_world();
+    convertExternalAnimation(*door.mutable_open_animation(), properties, "newton_adventure.door_to_bonus_world.open_animation");
+    convertExternalAnimation(*door.mutable_closed_animation(), properties, "newton_adventure.door_to_bonus_world.closed_animation");
 }
 
 void NewtonAdventureWriter::convertCloud(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)

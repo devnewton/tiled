@@ -94,11 +94,13 @@ message Key {
 }
 
 message Door {
-    required AnimationReference animation = 1;
+    required AnimationReference open_animation = 1;
+    required AnimationReference closed_animation = 2;
 }
 
 message DoorToBonusWorld {
-    required AnimationReference animation = 1;
+    required AnimationReference open_animation = 1;
+    required AnimationReference closed_animation = 2;
 }
 
 message Cloud {
@@ -207,5 +209,5 @@ message Entity {
 message Level {
     repeated EntityType entity_types = 1;
     repeated Entity entities = 2;
-    required bool rotate_gravity_possible = 3;
+    required bool rotate_gravity_possible = 3;	
 }
