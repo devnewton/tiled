@@ -43,11 +43,19 @@ void NewtonAdventureWriter::convertObjectGroup(const Tiled::ObjectGroup& objectG
     Q_FOREACH(Tiled::MapObject* object, objectGroup.objects())
     {
         im::bci::newtonadv::nal::Entity& entity = *level_.add_entities();
-        entity.mutable_position()->set_x(object->x());
-        entity.mutable_position()->set_y(object->y());
-        entity.set_zorder(zorder);
-        const im::bci::newtonadv::nal::EntityType& entityType = getOrCreateEntityType(*object);
-        entity.set_type(entityType.name());
+        try
+        {
+            entity.mutable_position()->set_x(object->x());
+            entity.mutable_position()->set_y(object->y());
+            entity.set_zorder(zorder);
+            const im::bci::newtonadv::nal::EntityType& entityType = getOrCreateEntityType(*object);
+            entity.set_type(entityType.name());
+        }
+        catch(const std::exception& e)
+        {
+            level_.mutable_entities()->RemoveLast();
+            errors_.append(e.what());
+        }
     }
 }
 
@@ -106,63 +114,68 @@ const Tiled::MapObject* NewtonAdventureWriter::findObjectByName(QString name)
 
 const im::bci::newtonadv::nal::EntityType* NewtonAdventureWriter::createEntityType(QString name, const Tiled::MapObject& object)
 {
-    im::bci::newtonadv::nal::EntityType& entityType =  *level_.add_entity_types();
-    entityType.set_name(name.toStdString());
-    convertShape(object, *entityType.mutable_shape());
+    im::bci::newtonadv::nal::EntityType& entityType =  *level_.add_entity_types();    
+    try
+    {
+        entityType.set_name(name.toStdString());
+        convertShape(object, *entityType.mutable_shape());
+        Tiled::Properties properties = getObjectProperties(object);
+        QString type = object.type();
+        if(type == "pikes")
+            convertPikes(entityType, object, properties);
+        else if(type == "platfom")
+            convertPlatform(entityType, object, properties);
+        else if(type == "bounce_platform")
+            convertBouncePlatform(entityType, object, properties);
+        else if(type == "cannon")
+            convertCannon(entityType, object, properties);
+        else if(type == "mumy")
+            convertMummy(entityType, object, properties);
+        else if(type == "bat")
+            convertBat(entityType, object, properties);
+        else if(type == "apple")
+            convertApple(entityType, object, properties);
+        else if(type == "coin")
+            convertCoin(entityType, object, properties);
+        else if(type == "key")
+            convertKey(entityType, object, properties);
+        else if(type == "door")
+            convertDoor(entityType, object, properties);
+        else if(type == "door_to_bonus_world")
+            convertDoorToBonusWorld(entityType, object, properties);
+        else if(type == "cloud")
+            convertCloud(entityType, object, properties);
+        else if(type == "world_map")
+            convertWorldMap(entityType, object, properties);
+        else if(type == "compass")
+            convertCompass(entityType, object, properties);
+        else if(type == "mobile_pike_anchor")
+            convertMobilePikeAnchor(entityType, object, properties);
+        else if(type == "axe_anchor")
+            convertAxeAnchor(entityType, object, properties);
+        else if(type == "activator")
+            convertActivator(entityType, object, properties);
+        else if(type == "memory_activator")
+            convertMemoryActivator(entityType, object, properties);
+        else if(type == "moving_platform")
+            convertMovingPlatform(entityType, object, properties);
+        else if(type == "teleporter")
+            convertTeleporter(entityType, object, properties);
+        else if(type == "key_lock")
+            convertKeyLock(entityType, object, properties);
+        else if(type == "help_sign")
+            convertHelpSign(entityType, object, properties);
+        else if(type == "egyption_boss")
+            convertEgyptianBoss(entityType, object, properties);
+        else if(type == "hero")
+            convertHero(entityType, object, properties);
 
-    Tiled::Properties properties = getObjectProperties(object);
-    QString type = object.type();
-
-    if(type == "pikes")
-        convertPikes(entityType, object, properties);
-    else if(type == "platfom")
-        convertPlatform(entityType, object, properties);
-    else if(type == "bounce_platform")
-        convertBouncePlatform(entityType, object, properties);
-    else if(type == "cannon")
-        convertCannon(entityType, object, properties);
-    else if(type == "mumy")
-        convertMummy(entityType, object, properties);
-    else if(type == "bat")
-        convertBat(entityType, object, properties);
-    else if(type == "apple")
-        convertApple(entityType, object, properties);
-    else if(type == "coin")
-        convertCoin(entityType, object, properties);
-    else if(type == "key")
-        convertKey(entityType, object, properties);
-    else if(type == "door")
-        convertDoor(entityType, object, properties);
-    else if(type == "door_to_bonus_world")
-        convertDoorToBonusWorld(entityType, object, properties);
-    else if(type == "cloud")
-        convertCloud(entityType, object, properties);
-    else if(type == "world_map")
-        convertWorldMap(entityType, object, properties);
-    else if(type == "compass")
-        convertCompass(entityType, object, properties);
-    else if(type == "mobile_pike_anchor")
-        convertMobilePikeAnchor(entityType, object, properties);
-    else if(type == "axe_anchor")
-        convertAxeAnchor(entityType, object, properties);
-    else if(type == "activator")
-        convertActivator(entityType, object, properties);
-    else if(type == "memory_activator")
-        convertMemoryActivator(entityType, object, properties);
-    else if(type == "moving_platform")
-        convertMovingPlatform(entityType, object, properties);
-    else if(type == "teleporter")
-        convertTeleporter(entityType, object, properties);
-    else if(type == "key_lock")
-        convertKeyLock(entityType, object, properties);
-    else if(type == "help_sign")
-        convertHelpSign(entityType, object, properties);
-    else if(type == "egyption_boss")
-        convertEgyptianBoss(entityType, object, properties);
-    else if(type == "hero")
-        convertHero(entityType, object, properties);
-
-    return &entityType;
+        return &entityType;
+    } catch(const std::exception&)
+    {
+        level_.mutable_entity_types()->RemoveLast();
+        throw;
+    }
 
 }
 
@@ -346,14 +359,14 @@ void NewtonAdventureWriter::convertKey(im::bci::newtonadv::nal::EntityType& enti
     convertAnimation(*entityType.mutable_key()->mutable_animation(), object, properties);
 }
 
-void NewtonAdventureWriter::convertDoor(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
+void NewtonAdventureWriter::convertDoor(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& /*object*/, const Tiled::Properties& properties)
 {
     im::bci::newtonadv::nal::Door& door = *entityType.mutable_door();
     convertExternalAnimation(*door.mutable_open_animation(), properties, "newton_adventure.door.open_animation");
     convertExternalAnimation(*door.mutable_closed_animation(), properties, "newton_adventure.door.closed_animation");
 }
 
-void NewtonAdventureWriter::convertDoorToBonusWorld(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
+void NewtonAdventureWriter::convertDoorToBonusWorld(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& /*object*/, const Tiled::Properties& properties)
 {
     im::bci::newtonadv::nal::DoorToBonusWorld& door = *entityType.mutable_door_to_bonus_world();
     convertExternalAnimation(*door.mutable_open_animation(), properties, "newton_adventure.door_to_bonus_world.open_animation");
@@ -389,7 +402,7 @@ void NewtonAdventureWriter::convertAxeAnchor(im::bci::newtonadv::nal::EntityType
     convertExternalAnimation(*axeAnchor.mutable_axe_animation(), properties, "newton_adventure.axe_anchor.axe_animation");
 }
 
-void NewtonAdventureWriter::convertActivator(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
+void NewtonAdventureWriter::convertActivator(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& /*object*/, const Tiled::Properties& properties)
 {
     im::bci::newtonadv::nal::Activator& activator = *entityType.mutable_activator();
     activator.set_activableid(properties["newton_adventure.activator.activate_id"].toInt());
@@ -397,7 +410,7 @@ void NewtonAdventureWriter::convertActivator(im::bci::newtonadv::nal::EntityType
     convertExternalAnimation(*activator.mutable_off_animation(), properties, "newton_adventure.activator.off_animation");
 }
 
-void NewtonAdventureWriter::convertMemoryActivator(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
+void NewtonAdventureWriter::convertMemoryActivator(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& /*object*/, const Tiled::Properties& properties)
 {
     im::bci::newtonadv::nal::MemoryActivator& activator = *entityType.mutable_memory_activator();
     activator.set_activableid(properties["newton_adventure.activator.activate_id"].toInt());
@@ -439,7 +452,7 @@ void NewtonAdventureWriter::convertHelpSign(im::bci::newtonadv::nal::EntityType&
     convertAnimation(*entityType.mutable_help_sign()->mutable_animation(), object, properties);
 }
 
-void NewtonAdventureWriter::convertEgyptianBoss(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
+void NewtonAdventureWriter::convertEgyptianBoss(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& /*object*/, const Tiled::Properties& properties)
 {
     im::bci::newtonadv::nal::EgyptianBoss& egyptianBoss = *entityType.mutable_egyptian_boss();
     convertExternalAnimation(*egyptianBoss.mutable_body_animation(), properties, "newton_adventure.egyptian_boss.body_animation");
