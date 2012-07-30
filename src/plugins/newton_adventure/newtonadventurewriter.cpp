@@ -1,6 +1,7 @@
 #include "newtonadventurewriter.h"
 #include <fstream>
 #include <QtCore/QFileInfo>
+#include <QtCore/QDir>
 #include "mapobject.h"
 #include "tile.h"
 
@@ -15,14 +16,35 @@ bool NewtonAdventureWriter::write()
 {
     convertMap();
 
-    std::fstream out(fileName_.toStdString().c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-    level_.SerializeToOstream(&out);
-    out.close();
+    QFile file(fileName_);
+    if(file.open(QFile::WriteOnly))
+    {
+        int fd = file.handle();
+        level_.SerializeToFileDescriptor(fd);
+        file.close();
+    }
+    else
+    {
+        errors_.append("Cannot write to " + fileName_);
+        return false;
+    }
 
-    std::fstream nanimOut(levelAnimationFileName_.toStdString().c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-    levelAnimations_.SerializeToOstream(&nanimOut);
-    nanimOut.close();
+    QString nanimOutFilename = QFileInfo(fileName_).absoluteDir().filePath(levelAnimationFileName_);
+    QFile nanimFile(nanimOutFilename);
+    if(nanimFile.open(QFile::WriteOnly))
+    {
+        int fd = nanimFile.handle();
+        levelAnimations_.SerializeToFileDescriptor(fd);
+        nanimFile.close();
+    }
+    else
+    {
+        errors_.append("Cannot write to " + nanimOutFilename);
+        return false;
+    }
+
     return true;
+
 }
 
 void NewtonAdventureWriter::convertMap()
@@ -79,7 +101,7 @@ QString NewtonAdventureWriter::getEntityTypeName(const Tiled::MapObject& object)
 {
     if(Tiled::Tile* tile = object.tile())
     {
-        return QString("tile_%s").arg(tile->id());
+        return QString("tile_%d").arg(tile->id());
     } else
     {
         return object.name();
@@ -123,7 +145,7 @@ const im::bci::newtonadv::nal::EntityType* NewtonAdventureWriter::createEntityTy
         QString type = object.type();
         if(type == "pikes")
             convertPikes(entityType, object, properties);
-        else if(type == "platfom")
+        else if(type == "platform")
             convertPlatform(entityType, object, properties);
         else if(type == "bounce_platform")
             convertBouncePlatform(entityType, object, properties);
@@ -181,7 +203,6 @@ const im::bci::newtonadv::nal::EntityType* NewtonAdventureWriter::createEntityTy
 
 void NewtonAdventureWriter::convertShape(const Tiled::MapObject& object, im::bci::newtonadv::nal::Shape& shape)
 {
-    int bcitodo = 0;//circle
     switch(object.shape())
     {
     case Tiled::MapObject::Rectangle:
@@ -204,6 +225,12 @@ void NewtonAdventureWriter::convertShape(const Tiled::MapObject& object, im::bci
         }
     case Tiled::MapObject::Polyline:
         break;
+    case Tiled::MapObject::Ellipse:
+        {
+            im::bci::newtonadv::nal::Circle& circle = *shape.mutable_circle();
+            circle.set_size(qMin(object.width(), object.height()));
+            break;
+        }
     }
 }
 
@@ -223,50 +250,59 @@ bool NewtonAdventureWriter::convertExternalAnimation(im::bci::newtonadv::nal::An
 
 void NewtonAdventureWriter::convertAnimation(im::bci::newtonadv::nal::AnimationReference& animationReference, const Tiled::MapObject& object, const Tiled::Properties& properties)
 {
-    if(convertExternalAnimation(animationReference, properties, "newton_adventure.animation"))
-        return;
-    else if(Tiled::Tile* tile = object.tile())
+    if(!convertExternalAnimation(animationReference, properties, "newton_adventure.animation"))
     {
-        std::string name = getEntityTypeName(object).toStdString();
-        animationReference.set_file(levelAnimationFileName_.toStdString());
-        animationReference.set_name(name);
-        if(!hasAnimation(name))
+        QImage qimage;
+        if(!object.imageSource().isEmpty())
+            qimage.load(object.imageSource());
+        else
+            qimage = object.tile()->image().toImage();
+        
+        if(!qimage.isNull())
         {
-            im::bci::nanim::Animation& animation =* levelAnimations_.add_animations();
-            animation.set_name(name);
-
-            im::bci::nanim::Frame& frame = *animation.add_frames();
-            frame.set_duration(1000000);
-            frame.set_imagename(name);
-            frame.set_u1(0.0f);
-            frame.set_v1(0.0f);
-            frame.set_u2(1.0f);
-            frame.set_v2(1.0f);
-
-            QPixmap pixmap = tile->image();
-            int w = pixmap.width();
-            int h = pixmap.height();
-            bool hasAlpha = pixmap.hasAlpha();
-            im::bci::nanim::Image& image = *levelAnimations_.add_images();
-            image.set_name(name);
-            image.set_width(w);
-            image.set_height(h);
-            image.set_format(hasAlpha ? im::bci::nanim::RGBA_8888 : im::bci::nanim::RGB_888 );
-            std::string& pixels = *image.mutable_pixels();
-            pixels.reserve(w * h * (hasAlpha ? 4 : 3));
-            QImage qimage = pixmap.toImage();
-            for(int y=0;y<qimage.height(); ++y)
+            std::string name = getEntityTypeName(object).toStdString();
+            animationReference.set_file(levelAnimationFileName_.toStdString());
+            animationReference.set_name(name);
+            if(!hasAnimation(name))
             {
-                for(int x=0;x<qimage.width(); ++x)
-                {
-                    QRgb rgb = qimage.pixel(x, y);
-                    pixels.push_back( qRed(rgb) );
-                    pixels.push_back( qGreen(rgb) );
-                    pixels.push_back( qBlue(rgb) );
-                    if(hasAlpha)
-                        pixels.push_back( qAlpha(rgb) );
-                }
+                im::bci::nanim::Animation& animation = *levelAnimations_.add_animations();
+                animation.set_name(name);
+    
+                im::bci::nanim::Frame& frame = *animation.add_frames();
+                frame.set_duration(1000000);
+                frame.set_imagename(name);
+                frame.set_u1(0.0f);
+                frame.set_v1(0.0f);
+                frame.set_u2(1.0f);
+                frame.set_v2(1.0f);
+    
+                convertQImageToNanimImage(qimage, *levelAnimations_.add_images(), name);
             }
+        }
+    }
+}
+
+void NewtonAdventureWriter::convertQImageToNanimImage(const QImage& qimage, im::bci::nanim::Image& image, const std::string& name) const
+{
+    int w = qimage.width();
+    int h = qimage.height();
+    bool hasAlpha = qimage.hasAlphaChannel();
+    image.set_name(name);
+    image.set_width(w);
+    image.set_height(h);
+    image.set_format(hasAlpha ? im::bci::nanim::RGBA_8888 : im::bci::nanim::RGB_888 );
+    std::string& pixels = *image.mutable_pixels();
+    pixels.reserve(w * h * (hasAlpha ? 4 : 3));
+    for(int y=0;y<w; ++y)
+    {
+        for(int x=0;x<h; ++x)
+        {
+            QRgb rgb = qimage.pixel(x, y);
+            pixels.push_back( qRed(rgb) );
+            pixels.push_back( qGreen(rgb) );
+            pixels.push_back( qBlue(rgb) );
+            if(hasAlpha)
+                pixels.push_back( qAlpha(rgb) );
         }
     }
 }

@@ -23,6 +23,7 @@ private:
     void convertShape(const Tiled::MapObject& object, im::bci::newtonadv::nal::Shape& shape);
     void convertAnimation(im::bci::newtonadv::nal::AnimationReference& animationReference, const Tiled::MapObject& object, const Tiled::Properties& properties);
     bool convertExternalAnimation(im::bci::newtonadv::nal::AnimationReference& animationReference, const Tiled::Properties& properties, const QString& propertyBasename);
+    void convertQImageToNanimImage(const QImage& qimage, im::bci::nanim::Image& image, const std::string& name) const;
     void convertPikes(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties);
     void convertPlatform(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties);
     void convertBouncePlatform(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties);
@@ -50,8 +51,7 @@ private:
 
     QHash<QString, const im::bci::newtonadv::nal::EntityType* > entityTypesByName_;
     const Tiled::Map* map_;
-    const QString fileName_;
-    QString levelAnimationFileName_;
+    const QString fileName_, levelAnimationFileName_;
     QStringList errors_;
     im::bci::newtonadv::nal::Level level_;
     im::bci::nanim::Nanim levelAnimations_;
