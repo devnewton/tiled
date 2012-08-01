@@ -67,8 +67,11 @@ void NewtonAdventureWriter::convertObjectGroup(const Tiled::ObjectGroup& objectG
         im::bci::newtonadv::nal::Entity& entity = *level_.add_entities();
         try
         {
-            entity.mutable_position()->set_x(object->x());
-            entity.mutable_position()->set_y(object->y());
+            QPointF center = object->bounds().center();
+            float w = object->width();
+            float h = object->height();
+            entity.mutable_position()->set_x(object->x() + w  / 2.0f);
+            entity.mutable_position()->set_y(-object->y() - h / 2.0f);
             entity.set_zorder(zorder);
             const im::bci::newtonadv::nal::EntityType& entityType = getOrCreateEntityType(*object);
             entity.set_type(entityType.name());
@@ -104,7 +107,10 @@ QString NewtonAdventureWriter::getEntityTypeName(const Tiled::MapObject& object)
         return QString("tile_%d").arg(tile->id());
     } else
     {
-        return object.name();
+        QString name = object.name();
+        if(name.isEmpty())
+            name = QString("unamed_%d").arg(level_.entity_types_size() + 1);
+        return name;
     }
 }
 
@@ -228,7 +234,7 @@ void NewtonAdventureWriter::convertShape(const Tiled::MapObject& object, im::bci
     case Tiled::MapObject::Ellipse:
         {
             im::bci::newtonadv::nal::Circle& circle = *shape.mutable_circle();
-            circle.set_size(qMin(object.width(), object.height()));
+            circle.set_size(qMin(object.width(), object.height()) / 2.0f);
             break;
         }
     }

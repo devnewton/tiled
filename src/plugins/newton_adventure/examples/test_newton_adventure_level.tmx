@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" width="20" height="20" tilewidth="32" tileheight="32">
  <objectgroup name="objects" width="20" height="20">
-  <object name="platform" type="platform" image="cold_stone_snow_up.png" x="3" y="407" width="480" height="81"/>
-  <object type="coin" image="coin.png" x="320" y="210" width="195" height="195">
+  <object name="platform1" type="platform" image="cold_stone_snow_up.png" x="3" y="407" width="480" height="81"/>
+  <object name="coin1" type="coin" image="coin.png" x="320" y="210" width="195" height="195">
+   <properties>
+    <property name="newton_adventure.animation" value="coin.png"/>
+   </properties>
    <ellipse/>
   </object>
-  <object type="hero" image="hero.gif" x="102" y="318" width="81" height="81">
+  <object name="hero" type="hero" image="hero.gif" x="114" y="102" width="81" height="81">
+   <properties>
+    <property name="newton_adventure.animation" value="hero.gif"/>
+   </properties>
    <ellipse/>
   </object>
  </objectgroup>
