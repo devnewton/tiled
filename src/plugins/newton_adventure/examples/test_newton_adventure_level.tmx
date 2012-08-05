@@ -14,5 +14,11 @@
    </properties>
    <ellipse/>
   </object>
+  <object name="platform2" type="platform" image="cold_stone_snow_up.png" x="13" y="110">
+   <polygon points="0,0 172,282 -8,294"/>
+  </object>
+  <object name="platform3" type="platform" image="cold_stone_snow_up.png" x="495" y="395">
+   <polygon points="0,0 93,-354 121,40"/>
+  </object>
  </objectgroup>
 </map>

@@ -4,6 +4,7 @@
 #include <QtCore/QDir>
 #include "mapobject.h"
 #include "tile.h"
+#include "polygontools.h"
 
 NewtonAdventureWriter::NewtonAdventureWriter(const Tiled::Map *map, const QString &fileName)
     : map_( map )
@@ -221,11 +222,14 @@ void NewtonAdventureWriter::convertShape(const Tiled::MapObject& object, im::bci
     case Tiled::MapObject::Polygon:
         {
             im::bci::newtonadv::nal::ConvexPolygon& polygon = *shape.mutable_polygon();
-            Q_FOREACH(QPointF point, object.polygon())
+            QPolygonF convexHull = im::bci::polygon_tools::convex_hull(object.polygon());
+            float w = object.width();
+            float h = object.height();
+            Q_FOREACH(QPointF point, convexHull)
             {
                 im::bci::newtonadv::nal::Vertex& vertex = *polygon.add_vertices();
-                vertex.set_x(point.x());
-                vertex.set_y(point.y());
+                vertex.set_x(point.x() + w / 2.0f);
+                vertex.set_y(-point.y() - h/2.0f);
             }
             break;
         }
