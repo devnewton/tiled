@@ -6,6 +6,56 @@
 #include "tile.h"
 #include "polygontools.h"
 
+namespace
+{
+
+template< typename T >
+void convertPhys2d(T& entity, const Tiled::Properties& properties, const QString& propertyPrefix="newton_adventure.phys2d")
+{
+    QString enabled = properties[propertyPrefix + ".enabled"];
+    if(!enabled.isEmpty())
+        entity.mutable_phys2d()->set_enabled( enabled != "false" );
+
+    QString rotatable = properties[propertyPrefix + ".rotatable"];
+    if(!rotatable.isEmpty())
+        entity.mutable_phys2d()->set_rotatable( rotatable != "false" );
+
+    QString moveable = properties[propertyPrefix + ".moveable"];
+    if(!moveable.isEmpty())
+        entity.mutable_phys2d()->set_moveable( moveable != "false" );
+
+    QString can_rest = properties[propertyPrefix + ".can_rest"];
+    if(!can_rest.isEmpty())
+        entity.mutable_phys2d()->set_can_rest( can_rest != "false" );
+
+    QString gravity_effected = properties[propertyPrefix + ".gravity_effected"];
+    if(!gravity_effected.isEmpty())
+        entity.mutable_phys2d()->set_gravity_effected( gravity_effected != "false" );
+
+    QString mass = properties[propertyPrefix + ".mass"];
+    if(!mass.isEmpty())
+        entity.mutable_phys2d()->set_mass( mass.toFloat() );
+
+    QString restitution = properties[propertyPrefix + ".restitution"];
+    if(!restitution.isEmpty())
+        entity.mutable_phys2d()->set_restitution( restitution.toFloat() );
+
+    QString damping = properties[propertyPrefix + ".damping"];
+    if(!damping.isEmpty())
+        entity.mutable_phys2d()->set_damping( damping.toFloat() );
+
+    QString rot_damping = properties[propertyPrefix + ".rot_damping"];
+    if(!rot_damping.isEmpty())
+        entity.mutable_phys2d()->set_rot_damping( rot_damping.toFloat() );
+
+    QString friction = properties[propertyPrefix + ".friction"];
+    if(!friction.isEmpty())
+        entity.mutable_phys2d()->set_friction( friction.toFloat() );
+
+}
+
+}
+
 NewtonAdventureWriter::NewtonAdventureWriter(const Tiled::Map *map, const QString &fileName)
     : map_( map )
     , fileName_(fileName)
@@ -68,7 +118,6 @@ void NewtonAdventureWriter::convertObjectGroup(const Tiled::ObjectGroup& objectG
         im::bci::newtonadv::nal::Entity& entity = *level_.add_entities();
         try
         {
-            QPointF center = object->bounds().center();
             float w = object->width();
             float h = object->height();
             entity.mutable_position()->set_x(object->x() + w  / 2.0f);
@@ -208,6 +257,7 @@ const im::bci::newtonadv::nal::EntityType* NewtonAdventureWriter::createEntityTy
 
 }
 
+
 void NewtonAdventureWriter::convertShape(const Tiled::MapObject& object, im::bci::newtonadv::nal::Shape& shape)
 {
     switch(object.shape())
@@ -343,24 +393,20 @@ void NewtonAdventureWriter::convertPikes(im::bci::newtonadv::nal::EntityType& en
         pikes.set_dangerous_side(im::bci::newtonadv::nal::Pikes_DangerousSide_RIGHT);
 
     convertAnimation(*pikes.mutable_animation(), object, properties);
+    convertPhys2d(pikes, properties);
 }
 
 void NewtonAdventureWriter::convertPlatform(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
 {
     im::bci::newtonadv::nal::Platform& platform = *entityType.mutable_platform();
-
-    platform.set_enabled( properties["newton_adventure.platform.enabled"] != "false" );
-
-    QString friction = properties["newton_adventure.platform.friction"];
-    if(!friction.isEmpty())
-        platform.set_friction( friction.toFloat() );
-
     convertAnimation(*platform.mutable_animation(), object, properties);
+    convertPhys2d(platform, properties);
 }
 
 void NewtonAdventureWriter::convertBouncePlatform(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
 {
     convertAnimation(*entityType.mutable_bounce_platform()->mutable_animation(), object, properties);
+    convertPhys2d(*entityType.mutable_bounce_platform(), properties);
 }
 
 void NewtonAdventureWriter::convertCannon(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
@@ -383,11 +429,13 @@ void NewtonAdventureWriter::convertCannon(im::bci::newtonadv::nal::EntityType& e
 void NewtonAdventureWriter::convertMummy(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
 {
     convertAnimation(*entityType.mutable_mummy()->mutable_animation(), object, properties);
+    convertPhys2d(*entityType.mutable_mummy(), properties);
 }
 
 void NewtonAdventureWriter::convertBat(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
 {
     convertAnimation(*entityType.mutable_bat()->mutable_animation(), object, properties);
+    convertPhys2d(*entityType.mutable_bat(), properties);
 }
 
 void NewtonAdventureWriter::convertApple(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
@@ -403,6 +451,7 @@ void NewtonAdventureWriter::convertCoin(im::bci::newtonadv::nal::EntityType& ent
 void NewtonAdventureWriter::convertKey(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
 {
     convertAnimation(*entityType.mutable_key()->mutable_animation(), object, properties);
+    convertPhys2d(*entityType.mutable_key(), properties);
 }
 
 void NewtonAdventureWriter::convertDoor(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& /*object*/, const Tiled::Properties& properties)
@@ -422,6 +471,7 @@ void NewtonAdventureWriter::convertDoorToBonusWorld(im::bci::newtonadv::nal::Ent
 void NewtonAdventureWriter::convertCloud(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
 {
     convertAnimation(*entityType.mutable_cloud()->mutable_animation(), object, properties);
+    convertPhys2d(*entityType.mutable_cloud(), properties);
 }
 
 void NewtonAdventureWriter::convertWorldMap(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
@@ -437,15 +487,19 @@ void NewtonAdventureWriter::convertCompass(im::bci::newtonadv::nal::EntityType& 
 void NewtonAdventureWriter::convertMobilePikeAnchor(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
 {
     im::bci::newtonadv::nal::MobilePikeAnchor& mobilePikeAnchor = *entityType.mutable_mobile_pike_anchor();
-    convertAnimation(*mobilePikeAnchor.mutable_animation(), object, properties);
-    convertExternalAnimation(*mobilePikeAnchor.mutable_mobile_pikes_animation(), properties, "newton_adventure.mobile_pike_anchor.mobile_pike_animation");
+    convertAnimation(*mobilePikeAnchor.mutable_anchor()->mutable_animation(), object, properties);
+    convertExternalAnimation(*mobilePikeAnchor.mutable_mobile()->mutable_animation(), properties, "newton_adventure.mobile_pike.animation");
+    convertPhys2d(*mobilePikeAnchor.mutable_anchor(), properties, "newton_adventure.mobile_pike_anchor.phys2d");
+    convertPhys2d(*mobilePikeAnchor.mutable_mobile(), properties, "newton_adventure.mobile_pike.phys2d");
 }
 
 void NewtonAdventureWriter::convertAxeAnchor(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
 {
     im::bci::newtonadv::nal::AxeAnchor& axeAnchor = *entityType.mutable_axe_anchor();
-    convertAnimation(*axeAnchor.mutable_animation(), object, properties);
-    convertExternalAnimation(*axeAnchor.mutable_axe_animation(), properties, "newton_adventure.axe_anchor.axe_animation");
+    convertAnimation(*axeAnchor.mutable_anchor()->mutable_animation(), object, properties);
+    convertExternalAnimation(*axeAnchor.mutable_mobile()->mutable_animation(), properties, "newton_adventure.axe.animation");
+    convertPhys2d(*axeAnchor.mutable_anchor(), properties, "newton_adventure.axe_anchor.phys2d");
+    convertPhys2d(*axeAnchor.mutable_mobile(), properties, "newton_adventure.axe.phys2d");
 }
 
 void NewtonAdventureWriter::convertActivator(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& /*object*/, const Tiled::Properties& properties)
@@ -454,6 +508,7 @@ void NewtonAdventureWriter::convertActivator(im::bci::newtonadv::nal::EntityType
     activator.set_activableid(properties["newton_adventure.activator.activate_id"].toInt());
     convertExternalAnimation(*activator.mutable_on_animation(), properties, "newton_adventure.activator.on_animation");
     convertExternalAnimation(*activator.mutable_off_animation(), properties, "newton_adventure.activator.off_animation");
+    convertPhys2d(activator, properties);
 }
 
 void NewtonAdventureWriter::convertMemoryActivator(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& /*object*/, const Tiled::Properties& properties)
@@ -463,6 +518,7 @@ void NewtonAdventureWriter::convertMemoryActivator(im::bci::newtonadv::nal::Enti
     convertExternalAnimation(*activator.mutable_on_animation(), properties, "newton_adventure.memory_activator.on_animation");
     convertExternalAnimation(*activator.mutable_off_animation(), properties, "newton_adventure.memory_activator.off_animation");
     convertExternalAnimation(*activator.mutable_hide_animation(), properties, "newton_adventure.memory_activator.hide_animation");
+    convertPhys2d(activator, properties);
 }
 
 void NewtonAdventureWriter::convertMovingPlatform(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
@@ -479,6 +535,7 @@ void NewtonAdventureWriter::convertMovingPlatform(im::bci::newtonadv::nal::Entit
             position.set_y(point.y());
         }
     }
+    convertPhys2d(movingPlatform, properties);
 }
 
 void NewtonAdventureWriter::convertTeleporter(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
@@ -491,6 +548,7 @@ void NewtonAdventureWriter::convertTeleporter(im::bci::newtonadv::nal::EntityTyp
 void NewtonAdventureWriter::convertKeyLock(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
 {
     convertAnimation(*entityType.mutable_keylock()->mutable_animation(), object, properties);
+    convertPhys2d(*entityType.mutable_keylock(), properties);
 }
 
 void NewtonAdventureWriter::convertHelpSign(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
@@ -508,5 +566,6 @@ void NewtonAdventureWriter::convertEgyptianBoss(im::bci::newtonadv::nal::EntityT
 void NewtonAdventureWriter::convertHero(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
 {
     convertAnimation(*entityType.mutable_hero()->mutable_animation(), object, properties);
+    convertPhys2d(*entityType.mutable_hero(), properties);
 }
 

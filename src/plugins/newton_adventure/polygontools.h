@@ -30,15 +30,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NEWTON_ADVENTURE_GLOBAL_H
-#define NEWTON_ADVENTURE_GLOBAL_H
 
-#include <QtCore/qglobal.h>
+#ifndef NEWTON_ADVENTURE_POLYGONTOOLS_H
+#define NEWTON_ADVENTURE_POLYGONTOOLS_H
 
-#if defined(NEWTON_ADVENTURE_LIBRARY)
-#  define NEWTON_ADVENTURE_SHARED_EXPORT Q_DECL_EXPORT
-#else
-#  define NEWTON_ADVENTURE_SHARED_EXPORT Q_DECL_IMPORT
-#endif
+#include <QPolygonF>
 
-#endif // NEWTON_ADVENTURE_GLOBAL_H
+namespace im
+{
+    namespace bci
+    {
+        namespace polygon_tools
+        {
+            QPolygonF convex_hull(const QPolygonF& input);
+        }
+    }
+}
+
+#endif /*NEWTON_ADVENTURE_POLYGONTOOLS_H*/
