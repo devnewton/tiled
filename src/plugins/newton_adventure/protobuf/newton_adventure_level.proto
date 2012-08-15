@@ -176,9 +176,8 @@ message MemoryActivator {
 
 message Blocker {
     required int32 activableId = 1;
-    required AnimationReference on_animation = 2;
-    required AnimationReference off_animation = 3;
-    optional Phys2dBodyParameters phys2d = 4;
+    required AnimationReference animation = 2;
+    optional Phys2dBodyParameters phys2d = 3;
 }
 
 message MovingPlatform {
@@ -238,6 +237,7 @@ message EntityType {
     optional HelpSign help_sign = 24;
     optional EgyptianBoss egyptian_boss = 25;
     optional Hero hero = 26;
+    optional Blocker blocker = 27;
 }
 
 message Entity {

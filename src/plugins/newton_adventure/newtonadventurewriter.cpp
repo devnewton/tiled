@@ -247,6 +247,8 @@ const im::bci::newtonadv::nal::EntityType* NewtonAdventureWriter::createEntityTy
             convertEgyptianBoss(entityType, object, properties);
         else if(type == "hero")
             convertHero(entityType, object, properties);
+        else if(type == "blocker")
+            convertBlocker(entityType, object, properties);
 
         return &entityType;
     } catch(const std::exception&)
@@ -401,6 +403,14 @@ void NewtonAdventureWriter::convertPlatform(im::bci::newtonadv::nal::EntityType&
     im::bci::newtonadv::nal::Platform& platform = *entityType.mutable_platform();
     convertAnimation(*platform.mutable_animation(), object, properties);
     convertPhys2d(platform, properties);
+}
+
+void NewtonAdventureWriter::convertBlocker(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
+{
+    im::bci::newtonadv::nal::Blocker& blocker = *entityType.mutable_blocker();
+    blocker.set_activableid(properties["newton_adventure.blocker.activate_id"].toInt());
+    convertAnimation(*blocker.mutable_animation(), object, properties);
+    convertPhys2d(blocker, properties);
 }
 
 void NewtonAdventureWriter::convertBouncePlatform(im::bci::newtonadv::nal::EntityType& entityType, const Tiled::MapObject& object, const Tiled::Properties& properties)
